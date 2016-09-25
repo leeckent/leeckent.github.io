@@ -27,12 +27,12 @@
     text-align: left;
     font: bold 20px/1.1 "ff-tisa-web-pro", Cambria, "Times New Roman", Georgia, Times, sans-serif;
 }
-.postTitle a:link, .postTitle a:visited, .postTitle a:active {
+.post .post-title a:link, .post-title a:visited, .post-title a:active {
         color: #21759b;
         font-weight:bold;
         transition: all 0.4s linear 0s;
 }
-.postTitle a:hover {
+.post .post-title a:hover {
         text-decoration: none;
         margin-left: 30px;
         font-weight:bold;
