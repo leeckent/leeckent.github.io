@@ -81,7 +81,10 @@ body {
     _height: 15px;
     border-top: 1px solid #ededed;
     margin-top: 20px;
-    padding-top: 20px;
+    padding-top: 20px 0 0 0;
+}
+.readmore a {
+	border: none;
 }
 
 
