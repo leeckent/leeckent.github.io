@@ -1,7 +1,9 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>JDK源码学习--String篇(-) | 江南乆无雪</title><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/4.2.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.0/grids-responsive-min.css"><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="/css/main.css?v=0.0.0"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">JDK源码学习--String篇(-)</h1><a id="logo" href="/.">江南乆无雪</a><p class="description">每一天的努力，只为让远方更近</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">JDK源码学习--String篇(-)</h1><div class="post-meta">Sep 25, 2016<span> | </span><span class="category"><a href="/categories/技术宅/">技术宅</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> Hits</span></span></div><div class="post-content"><p>工作三年了，用了三年的JAVA，突然发现竟然没有好好的看下JDK的源码，整天用着的String，只是大概知道怎么回事，其中的实现逻辑却是一头雾水。</p>
-<p>　　知耻而后勇，加油！！！<br>　　</p><h2>java.lang.String</h2><br><code>public final class String
-        implements java.io.Serializable, Comparable&lt;String&gt;, CharSequence {
-    }</code><br>　　String不属于基本的数据类型，由于　　final类型不能被继承，可以序列化。<p></p>
+<p>　　知耻而后勇，加油！！！<br>　　</p><h2>java.lang.String</h2><p></p>
+<pre><code>public final class String
+    implements java.io.Serializable, Comparable&lt;String&gt;, CharSequence {
+}
+</code></pre><p>　　String不属于基本的数据类型，由于　　final类型不能被继承，可以序列化。</p>
 <pre><code>/** The value is used for character storage. */
 private final char value[];
 </code></pre><p>　　使用final类型的字符数组存储字符串内容，String初始化后就不能被改变。</p>
@@ -15,8 +17,8 @@ private int hash; // Default to 0
 private static final long serialVersionUID = -6849794470754667710L;
 </code></pre><p>　　String实现了java.io.Serializable接口，支持序列化操作。</p>
 <p>　　注：序列化是为了存储整个对象，对象序列化的最主要的用处就是在传递和保存对象(object)的时候，保证对象的完整性和可传递性。</p>
-<p>　　　　譬如通过网络传输,或者把一个对象保存成一个文件的时候,要实现序列化接口。　</p>
-<p>　　源码中提供了很多种构造方法，有采用字节数组来构造，有采用StringBuffer和StringBuilder来构造等。<br>复制代码</p>
+<p>　　譬如通过网络传输,或者把一个对象保存成一个文件的时候,要实现序列化接口。　</p>
+<p>　　源码中提供了很多种构造方法，有采用字节数组来构造，有采用StringBuffer和StringBuilder来构造等。</p>
 <pre><code>public String(byte bytes[]) {
     this(bytes, 0, bytes.length);
 }
@@ -30,8 +32,7 @@ public String(StringBuffer buffer) {
 public String(StringBuilder builder) {
     this.value = Arrays.copyOf(builder.getValue(), builder.length());
 }
-</code></pre><p>复制代码</p>
-<p>　　其中有一种特殊的构造方法：<br>复制代码</p>
+</code></pre><p>　　其中有一种特殊的构造方法：</p>
 <pre><code>/*
 * Package private constructor which shares value array for speed.
 * this constructor is always expected to be called with share==true.
@@ -42,11 +43,12 @@ String(char[] value, boolean share) {
     // assert share : &quot;unshared not supported&quot;;
     this.value = value;
 }
-</code></pre><p>复制代码</p>
-<p>　　受保护的构造方法，提供两个参数，其中share参数未使用，对比前一个构造方法</p>
-<p>　　public String(char value[]) {<br>        this.value = Arrays.copyOf(value, value.length);<br>　　}</p>
-<p>　　后一种采用Arrays的copyOf方法将value中的内容逐一复制到String当中，而前一种直接采用引用赋值的方式，共享一个数组。</p>
-<p>　　这种特殊的构造方法优点：性能好，共享数组【节约内存】。<br>复制代码</p>
+</code></pre><p>　　受保护的构造方法，提供两个参数，其中share参数未使用，对比前一个构造方法</p>
+<pre><code>public String(char value[]) {
+    this.value = Arrays.copyOf(value, value.length);
+}
+</code></pre><p>　　后一种采用Arrays的copyOf方法将value中的内容逐一复制到String当中，而前一种直接采用引用赋值的方式，共享一个数组。</p>
+<p>　　这种特殊的构造方法优点：性能好，共享数组【节约内存】。</p>
 <pre><code> // 返回字符串的长度  
 public int length() {
     return value.length;
@@ -84,13 +86,12 @@ public int codePointCount(int beginIndex, int endIndex) {
     }
     return Character.codePointCountImpl(value, beginIndex, endIndex - beginIndex);
 }
-</code></pre><p>复制代码</p>
-<p>　　第二部分，介绍String中一些常用方法的重载和区别：</p>
+</code></pre><p>　　第二部分，介绍String中一些常用方法的重载和区别：</p>
 <p>　　如：replace, replaceFirst, replaceAll区别，valueOf重载</p>
-<div style="border: dashed 1px #999; padding: 10px; background: #f0f8ff;"><br><div>作者：<a style="color: red; font-family: 微软雅黑; text-decoration: none;" href="https://leeckent.github.io/about/" target="_blank">江南久无雪</a></div><br><div>源码记：<span style="color: #ff0000;">苦人所不苦，能人所不能，所谓成也</span></div><br><div>声明：原创博客请在转载时保留原文链接或者在文章开头加上本人博客地址，如发现错误，欢迎批评指正。</div><br></div>
+<div style="border: dashed 1px #999; padding: 10px; background: #f0f8ff;"><div>作者：<a style="color: red; font-family: 微软雅黑; text-decoration: none;" href="https://leeckent.github.io/about/" target="_blank">江南久无雪</a></div><div>源码记：<span style="color: #ff0000;">苦人所不苦，能人所不能，所谓成也</span></div><div>声明：原创博客请在转载时保留原文链接或者在文章开头加上本人博客地址，如发现错误，欢迎批评指正。</div></div>
 
 <p>　　</p>
-</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://yoursite.com/2016/09/25/JDK-String-first/" data-id="citir3s9m0000gfpob7co25xi" class="article-share-link">分享到</a><div class="tags"><a href="/tags/JDK源码/">JDK源码</a></div><div class="post-nav"><a href="/2016/09/18/girls-in-my-world/" class="next">过往的初中</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" class="search-form"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://yoursite.com"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术宅/">技术宅</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随手记/">随手记</a><span class="category-list-count">2</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/JDK源码/" style="font-size: 15px;">JDK源码</a> <a href="/tags/旅游/" style="font-size: 15px;">旅游</a> <a href="/tags/心情/" style="font-size: 15px;">心情</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK-String-first/">JDK源码学习--String篇(-)</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/18/girls-in-my-world/">过往的初中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/04/animal-parks-visit/">上海野生动物园之行</a></li></ul></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a href="/." rel="nofollow">江南乆无雪.</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="/css/jquery.fancybox.css?v=0.0.0"><script>var _hmt = _hmt || [];
+</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://yoursite.com/2016/09/25/JDK-String-first/" data-id="citirc14q0001h2polnnn6oea" class="article-share-link">分享到</a><div class="tags"><a href="/tags/JDK源码/">JDK源码</a></div><div class="post-nav"><a href="/2016/09/18/girls-in-my-world/" class="next">过往的初中</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" class="search-form"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://yoursite.com"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术宅/">技术宅</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随手记/">随手记</a><span class="category-list-count">2</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/JDK源码/" style="font-size: 15px;">JDK源码</a> <a href="/tags/心情/" style="font-size: 15px;">心情</a> <a href="/tags/旅游/" style="font-size: 15px;">旅游</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK-String-first/">JDK源码学习--String篇(-)</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/18/girls-in-my-world/">过往的初中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/04/animal-parks-visit/">上海野生动物园之行</a></li></ul></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a href="/." rel="nofollow">江南乆无雪.</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="/css/jquery.fancybox.css?v=0.0.0"><script>var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
   hm.src = "//hm.baidu.com/hm.js?284ac1b4fbc9bbed0328a339fe1809c2## Your Baidu Analytics tracking id, e.g. 8006843039519956000";
