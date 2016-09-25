@@ -17,3 +17,24 @@
 .post .post-content pre code {
     padding: 0;
 }
+.post .post-title {
+	padding-left: 10px;
+    border-left-style:solid;
+    border-left-width: 3px;
+    border-left-color: #515151;
+    margin: 0;
+    color: #555;
+    text-align: left;
+    font: bold 20px/1.1 "ff-tisa-web-pro", Cambria, "Times New Roman", Georgia, Times, sans-serif;
+}
+.postTitle a:link, .postTitle a:visited, .postTitle a:active {
+        color: #21759b;
+        font-weight:bold;
+        transition: all 0.4s linear 0s;
+}
+.postTitle a:hover {
+        text-decoration: none;
+        margin-left: 30px;
+        font-weight:bold;
+        color: #45bcf9;
+}
