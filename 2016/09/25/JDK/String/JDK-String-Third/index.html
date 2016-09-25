@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>JDK源码学习--String篇(三) 存储篇 | 江南乆无雪</title><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/4.2.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.0/grids-responsive-min.css"><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="/css/main.css?v=0.0.0"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">JDK源码学习--String篇(三) 存储篇</h1><a id="logo" href="/.">江南乆无雪</a><p class="description">每一天的努力，只为让远方更近</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">JDK源码学习--String篇(三) 存储篇</h1><div class="post-meta">Sep 25, 2016<span> | </span><span class="category"><a href="/categories/技术宅/">技术宅</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> Hits</span></span></div><div class="post-content"><p>在进一步解读String类时，先了解下内存分配和数据存储的。<br>　　数据存储</p>
+<p>　　1.寄存器：最快的存储区，位于处理器的内部。由于寄存器的数量有限，所以寄存器是按需分配。</p>
+<p>　　2.堆栈：位于RAM中，但是通过堆栈指针可以从处理器哪里获得直接支持。堆栈指针向下移动，则分配新的内存；堆栈指针向上移动释放内存。</p>
+<p>　　注：堆栈中存储基本的数据类型和【对象引用】，但是Java对象存储在堆中。</p>
+<p>　　3.堆：通用内存池，位于RAM中，用于存放所有的Java对象。</p>
+<p>　　注：堆中存储的 new创建的对象和数组。</p>
+<p>　　4.常量存储：存放常量。</p>
+<p>　　5.非RAM存储：数据不依赖于程序而存在。如：流对象和持久化对象<br>　　实例验证</p>
+<pre><code>String a = &quot;test&quot;;
+String b = &quot;test&quot;;
+</code></pre><p>　　其中”test”存储在String pool常量池中，String类的对象引用变量a和b存储在堆栈中。由于常量池中常量具有唯一性，所以引用对象a和b指向常量池中同一个常量”test”。</p>
+<p>　　由此可知，上述代码的处理过程：</p>
+<p>　　首先会在堆栈中创建一个String类的对象引用变量a，然后检查字符串常量池中是否含有”test”，若没有则将”test”存放到字符串常量池中，同时将变量a指向”test”;</p>
+<p>　　当创建变量b的时候，做同样的处理操作，这是就不会重新在字符串常量池中增加”test”，而是直接将变量b指向”test”。</p>
+<p>　　综上得知：</p>
+<p>　　　　第一行代码中：String a = “test”;将产生一个对象和一个引用。</p>
+<p>　　　　第二行代码中：String b = “test”;则只会产生一个引用。</p>
+<p>　　接着上面的示例</p>
+<pre><code>String c = new String(&quot;test&quot;);
+String d = new String(&quot;test&quot;);
+</code></pre><p>　　首先看String c = new String(“test”); 这一段代码：</p>
+<p>　　　　第一步：在堆栈中创建String类的对象引用变量c。</p>
+<p>　　　　第二步：使用new创建对象，将在堆中创建新的String对象，同时检查字符串常量池中是否含有”test”，没有就创建</p>
+<p>　　　　第三步：将变量c指向堆中的对象</p>
+<p>　　由于new操作，每次都会产生新的对象，所以String d = new String(“test”);执行的操作步骤和上面的执行步骤一致。</p>
+<p>　　由上面两个例子可知：</p>
+<pre><code>System.out.println(&quot;a = b ?&quot; + (a == b));
+System.out.println(&quot;c = d ?&quot; + (c == d));
+</code></pre><p>　　输出结果：</p>
+<pre><code>a = b ? true
+c = d ? false
+</code></pre><p>　　String最后一篇，将来讲述字符串的拼接，以及String，StringBuilder，StringBuffer的区别。</p>
+<div style="border: dashed 1px #999; padding: 10px; background: #f0f8ff;"><div>作者：<a style="color: red; font-family: 微软雅黑; text-decoration: none;" href="https://leeckent.github.io/about/" target="_blank">江南久无雪</a></div><div>源码记：<span style="color: #ff0000;">苦人所不苦，能人所不能，所谓成也</span></div><div>声明：原创博客请在转载时保留原文链接或者在文章开头加上本人博客地址，如发现错误，欢迎批评指正。</div></div>
+
+<p>　　</p>
+</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://yoursite.com/2016/09/25/JDK/String/JDK-String-Third/" data-id="citirpkk9000gihpovkhfils1" class="article-share-link">分享到</a><div class="tags"><a href="/tags/JDK源码/">JDK源码</a></div><div class="post-nav"><a href="/2016/09/25/JDK/String/JDK-String-Fourth/" class="pre">JDK源码学习--String篇(四) 终结篇</a><a href="/2016/09/18/girls-in-my-world/" class="next">过往的初中</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" class="search-form"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://yoursite.com"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术宅/">技术宅</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随手记/">随手记</a><span class="category-list-count">2</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/旅游/" style="font-size: 15px;">旅游</a> <a href="/tags/心情/" style="font-size: 15px;">心情</a> <a href="/tags/JDK源码/" style="font-size: 15px;">JDK源码</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-First/">JDK源码学习--String篇(-)</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Second/">JDK源码学习--String篇(二) 关于String采用final修饰的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Fourth/">JDK源码学习--String篇(四) 终结篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Third/">JDK源码学习--String篇(三) 存储篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/18/girls-in-my-world/">过往的初中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/04/animal-parks-visit/">上海野生动物园之行</a></li></ul></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a href="/." rel="nofollow">江南乆无雪.</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="/css/jquery.fancybox.css?v=0.0.0"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?284ac1b4fbc9bbed0328a339fe1809c2## Your Baidu Analytics tracking id, e.g. 8006843039519956000";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+  })();
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
