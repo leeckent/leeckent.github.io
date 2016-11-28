@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><meta name="baidu-site-verification" content="WAE03U7Enu"><title>JDK源码学习--HashMap篇(-)基础篇 | 江南乆无雪</title><link rel="stylesheet" type="text/css" href="/css/normalize.min.css"><link rel="stylesheet" type="text/css" href="/css/pure-min.css"><link rel="stylesheet" type="text/css" href="/css/grids-responsive-min.css"><link rel="stylesheet" type="text/css" href="/css/style.css?v=1.0.3"><link rel="stylesheet" type="text/css" href="/css/main.css?v=1.0.3"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css"><script type="text/javascript" src="/js/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">JDK源码学习--HashMap篇(-)基础篇</h1><a id="logo" href="/.">江南乆无雪</a><p class="description">每一天的努力，只为让远方更近</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">JDK源码学习--HashMap篇(-)基础篇</h1><div class="post-meta">Nov 28, 2016<span> | </span><span class="category"><a href="/categories/技术宅/">技术宅</a></span></div><div class="post-content"><p>HashMap的数据结构是数组和链表+】红黑树【】JDK1.8后新加入，当链表的长度大于8时，转换为红黑树】的结合体。</p>
+<p>数组：存储区间连续，内存占用严重。寻址容易，插入和删除困难。</p>
+<p>链表：存储区间离散，内存占用宽松。寻址困难，插入和删除容易。</p>
+<p>HashMap的特性：</p>
+<ul>
+<li>采用键值对的形式存储</li>
+<li>是非线程安全的</li>
+<li>可以接受null的键和null的值,HashMap最多只允许一条记录的键为null，允许多条记录的值为null</li>
+</ul>
+<p>HashMap的实现原理：</p>
+<pre><code>HashMap使用哈希表来存储的。哈希表为解决冲突，可以采用开放地址法和链地址法等来解决问题，Java中HashMap采用了链地址法。链地址法，简单来说，就是数组加链表的结合。在每个数组元素上都一个链表结构，当数据被Hash后，得到数组下标，把数据放在对应下标元素的链表上。
+
+HashMap是基于hashing的原理，使用put(key, vlaue)存储到HashMap对象中，使用get(key)从HashMap中获取对象。当使用put()传递键和值的时候，先对键调用hashCode()方法，通过返回的bucket位置来存储Node对象。需要注意的是：bucket中存储的键对象和值对象。
+
+具体实现如下：
+
+int hash = key.hashCode();
+
+实际中HashMap不采用这种处理形式，因为模运算的消耗还是比较大的，它通过h &amp; (table.length -1)来得到该对象的保存位，而HashMap底层数组的长度总是2的n次方，这是HashMap在速度上的优化。当length总是2的n次方时，h&amp; (length-1)运算等价于对length取模，也就是h%length，但是&amp;比%具有更高的效率
+
+int index = hash % Node[].length; 
+
+Node[index] = value;
+
+此时会引发一个问题：当计算的hash值是一样的话，产生的index就会一样，此时如何存储？
+</code></pre><p>HashMap源码可知：新建HashMap的时候，初始化一个数组，通过next指向下一个元素的引用从而构成链表。</p>
+<pre><code>transient Node&lt;K,V&gt;[] table;
+
+static class Node&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+    final int hash;
+    final K key;
+    V value;
+    Node&lt;K,V&gt; next;
+
+    Node(int hash, K key, V value, Node&lt;K,V&gt; next) {
+        this.hash = hash;
+        this.key = key;
+        this.value = value;
+        this.next = next;
+    }
+
+    public final K getKey()        { return key; }
+    public final V getValue()      { return value; }
+    public final String toString() { return key + &quot;=&quot; + value; }
+
+    public final int hashCode() {
+        return Objects.hashCode(key) ^ Objects.hashCode(value);
+    }
+
+    public final V setValue(V newValue) {
+        V oldValue = value;
+        value = newValue;
+        return oldValue;
+    }
+
+    public final boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (o instanceof Map.Entry) {
+            Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;)o;
+            if (Objects.equals(key, e.getKey()) &amp;&amp;
+                Objects.equals(value, e.getValue()))
+                return true;
+        }
+        return false;
+    }
+}
+</code></pre><p>从上面的源码中可以看到，链表中通过next来指向下一个引用来组成链接。</p>
+<pre><code>Node[] table的初始化长度length(默认值是16)，Load factor为负载因子(默认值是0.75)，threshold是HashMap所能容纳的最大数据量的Node(键值对)个数。threshold = length * Load factor。也就是说，在数组定义好长度之后，负载因子越大，所能容纳的键值对个数越多。超过这个数目就重新resize(扩容)，扩容后的HashMap容量是之前容量的两倍。
+</code></pre><p>当存储的对象的hashCode是一致的时候，说明此时对应的是同一个bucket，用例子来说明：</p>
+<p>首先A存储到HashMap中，此时A的index为0，即：Node[0] = A;</p>
+<p>这时B也进入，B的hashCode和A的相同，此时 Node[0] = B; B.next = A;</p>
+<p>从而以此类推组成链表，新进入的放在链表的头部，后面一次通过next来连接。</p>
+<div style="border: dashed 1px #999; padding: 10px; background: #f0f8ff;"><div>作者：<a style="color: red; font-family: 微软雅黑; text-decoration: none;" href="https://leeckent.github.io/about/" target="_blank">江南久无雪</a></div><div>源码记：<span style="color: #ff0000;">苦人所不苦，能人所不能，所谓成也</span></div><div>声明：原创博客请在转载时保留原文链接或者在文章开头加上本人博客地址，如发现错误，欢迎批评指正。</div></div>
+
+<p>　　</p>
+</div><script type="text/javascript" src="/js/share.js?v=1.0.3" async></script><a data-url="https://leeckent.github.io/2016/11/28/JDK/HashMap/HashMap/" data-id="ciw1t9u62000s39poq7e6xelw" class="article-share-link">分享到</a><div class="tags"><a href="/tags/JDK源码/">JDK源码</a></div><div class="post-nav"><a href="/2016/11/23/hadoop/" class="next">Hadoop学习笔记（一）</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" class="search-form"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="https://leeckent.github.io"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术宅/">技术宅</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书汇/">读书汇</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随手记/">随手记</a><span class="category-list-count">2</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/旅游/" style="font-size: 15px;">旅游</a> <a href="/tags/心情/" style="font-size: 15px;">心情</a> <a href="/tags/学习笔记/" style="font-size: 15px;">学习笔记</a> <a href="/tags/书评/" style="font-size: 15px;">书评</a> <a href="/tags/JDK源码/" style="font-size: 15px;">JDK源码</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/11/28/JDK/HashMap/HashMap/">JDK源码学习--HashMap篇(-)基础篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/11/23/hadoop/">Hadoop学习笔记（一）</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/10/08/pilgrimage/">《一个人的朝圣》</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Fourth/">JDK源码学习--String篇(四) 终结篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Third/">JDK源码学习--String篇(三) 存储篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-Second/">JDK源码学习--String篇(二) 关于String采用final修饰的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/25/JDK/String/JDK-String-First/">JDK源码学习--String篇(-)基础篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/18/girls-in-my-world/">过往的初中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/09/04/animal-parks-visit/">上海野生动物园之行</a></li></ul></div></div></div><div class="pure-u-1 pure-u-md-4-4"><div id="footer">Copyright ©2016 <a href="/." rel="nofollow">江南乆无雪.</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=1.0.3" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=1.0.3" async></script><link rel="stylesheet" type="text/css" href="/css/jquery.fancybox.css?v=1.0.3"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?284ac1b4fbc9bbed0328a339fe1809c2## Your Baidu Analytics tracking id, e.g. 8006843039519956000";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+  })();
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=1.0.3"></script><script type="text/javascript" src="/js/smartresize.js?v=1.0.3"></script></div></body></html>
